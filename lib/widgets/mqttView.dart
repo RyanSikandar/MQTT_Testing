@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mqtt_test/mqtt/MQTTManager.dart';
 import 'package:mqtt_test/mqtt/state/MQTTAppState.dart';
 import 'package:provider/provider.dart';
-
+import 'package:uuid/uuid.dart';
 class MQTTView extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -108,6 +108,7 @@ class _MQTTViewState extends State<MQTTView> {
     );
   }
 
+// shows the connection state of the app
   Widget _buildConnectionStateText(String status) {
     return Row(
       children: <Widget>[
@@ -122,6 +123,7 @@ class _MQTTViewState extends State<MQTTView> {
 
   Widget _buildTextFieldWith(TextEditingController controller, String hintText,
       MQTTAppConnectionState state) {
+    //allows you to edit the text field if the connection state is disconnected otherwise you cannot change the text field
     bool shouldEnable = false;
     if (controller == _messageTextController &&
         state == MQTTAppConnectionState.connected) {
@@ -187,14 +189,16 @@ class _MQTTViewState extends State<MQTTView> {
   }
 
   Widget _buildSendButtonFrom(MQTTAppConnectionState state) {
-    // ignore: deprecated_member_use
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.green, // Set the button color
       ),
 
+      //sends a message if the connection state is connected otherwise the button is disabled
+
       onPressed: state == MQTTAppConnectionState.connected
           ? () {
+              // it sends the message to the manager
               _publishMessage(_messageTextController.text);
             }
           : null, // Disable the button if not connected
@@ -215,16 +219,14 @@ class _MQTTViewState extends State<MQTTView> {
   }
 
   void _configureAndConnect() {
-    // ignore: flutter_style_todos
-    // TODO: Use UUID
-    String osPrefix = 'Flutter_iOS';
-    if (Platform.isAndroid) {
-      osPrefix = 'Flutter_Android';
-    }
+    var uuid = Uuid();
+     String identifier = uuid.v4();
+     print('The identifier is $identifier');
+    //creates a new manager with the host, topic, identifier and state
     manager = MQTTManager(
         host: _hostTextController.text,
         topic: _topicTextController.text,
-        identifier: osPrefix,
+        identifier: identifier,
         state: currentAppState);
     manager.initializeMQTTClient();
     manager.connect();
@@ -235,11 +237,7 @@ class _MQTTViewState extends State<MQTTView> {
   }
 
   void _publishMessage(String text) {
-    String osPrefix = 'Flutter_iOS';
-    if (Platform.isAndroid) {
-      osPrefix = 'Flutter_Android';
-    }
-    final String message = osPrefix + ' says: ' + text;
+    final String message = text;
     manager.publish(message);
     _messageTextController.clear();
   }

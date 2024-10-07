@@ -11,6 +11,7 @@ class MQTTManager {
   final String _identifier;
   final String _host;
   final String _topic;
+  
 
   // Constructor
   // ignore: sort_constructors_first
@@ -25,8 +26,7 @@ class MQTTManager {
         _currentState = state;
 
   void initializeMQTTClient() {
-    _client = MqttServerClient(_host, _identifier);
-    _client!.port = 1883;
+    _client = MqttServerClient.withPort(_host, _identifier, 1883);
     _client!.keepAlivePeriod = 20;
     _client!.onDisconnected = onDisconnected;
     _client!.secure = false;
@@ -53,15 +53,26 @@ class MQTTManager {
     assert(_client != null);
     try {
       print('EXAMPLE::Mosquitto client connecting....');
+      print('EXAMPLE::host is $_host');
+
+//client port
+
       await _client!.connect();
     } on Exception catch (e) {
       print('EXAMPLE::client exception - $e');
+      // Retry logic (optional)
+      // Future.delayed(Duration(seconds: 5), () => connect());
       disconnect();
     }
   }
 
   void disconnect() {
-    _client!.disconnect();
+    if (_client != null) {
+      print('Disconnecting MQTT client...');
+      _client!.disconnect();
+    } else {
+      print('Client is not initialized, cannot disconnect.');
+    }
   }
 
   //Publish something to the topic
